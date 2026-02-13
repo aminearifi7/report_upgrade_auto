@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.log
+logs/
+screenshots/
+.env
+.idea/
+.vscode/
+*.pyc
+*.swp

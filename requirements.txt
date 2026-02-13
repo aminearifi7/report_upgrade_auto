@@ -1,0 +1,9 @@
+selenium
+pytest
+webdriver-manager
+pytest-html
+python-dotenv
+opencv-python
+numpy
+pyautogui
+Pillow
