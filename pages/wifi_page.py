@@ -3,6 +3,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from pages.base_page import BasePage, RecoveryHandledException
+from utils.config import Config
 import time
 
 class WifiPage(BasePage):
@@ -22,15 +23,18 @@ class WifiPage(BasePage):
 
     def navigate(self, base_url=None):
         """Navigates to the WiFi page."""
-        url = f"{base_url if base_url else 'http://192.168.1.1'}/{self.URL_PATH}"
+        target_base = base_url if base_url else Config.BASE_URL
+        url = f"{target_base}/{self.URL_PATH}"
         self.logger.info(f"Navigating to {url}")
         
-        # Robust navigation
+        # Robust navigation with retry if redirected to dashboard
         self.driver.get(url)
-        time.sleep(2)
+        time.sleep(3) # Increase buffer
+        
         if "wifi" not in self.driver.current_url.lower():
+             self.logger.warning("Redirected? Attempting direct navigation again...")
              self.driver.get(url)
-             time.sleep(2)
+             time.sleep(3)
              
         self.wait_for_page_load()
         

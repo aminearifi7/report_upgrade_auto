@@ -1,5 +1,6 @@
 from selenium.webdriver.common.by import By
 from pages.base_page import BasePage, RecoveryHandledException
+from utils.config import Config
 import time
 
 class Wifi24Page(BasePage):
@@ -31,12 +32,18 @@ class Wifi24Page(BasePage):
 
     def navigate(self):
         """Navigates to the WiFi 2.4GHz details page."""
-        # Using the new IP address as base URL if Config.BASE_URL is still 1.1
-        # In main.py we will likely use driver.get directly or update Config
-        # but for now let's use the path as defined
-        url = f"http://192.168.3.5/{self.URL_PATH}"
+        url = f"{Config.BASE_URL}/{self.URL_PATH}"
         self.logger.info(f"Navigating to WiFi 2.4GHz details page: {url}")
+        
+        # Robust navigation with retry if redirected to dashboard
         self.driver.get(url)
+        time.sleep(3)
+        
+        if "details" not in self.driver.current_url.lower():
+             self.logger.warning("Redirected? Attempting direct navigation again...")
+             self.driver.get(url)
+             time.sleep(3)
+             
         self.wait_for_page_load()
 
     def update_ssid_and_password(self, ssid, password):
