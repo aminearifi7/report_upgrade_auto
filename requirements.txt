@@ -1,4 +1,4 @@
-selenium
+selenium>=4.10.0
 pytest
 webdriver-manager
 pytest-html
