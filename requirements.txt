@@ -7,3 +7,4 @@ opencv-python
 numpy
 pyautogui
 Pillow
+paramiko

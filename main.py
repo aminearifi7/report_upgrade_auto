@@ -1,5 +1,5 @@
 """
-Main entry point for Home Gateway Upgrade Report automation.
+Main entry point for Home Gateway Configuration Automation.
 Orchestrates: Login -> Switch to Advanced Mode.
 """
 from utils.driver_factory import get_driver
@@ -17,10 +17,12 @@ from pages.dyndns_page import DyndnsPage
 from pages.ntp_page import NtpPage
 from pages.firewall_page import FirewallPage
 from pages.wifi_guest_page import WifiGuestPage
+from pages.users_page import UsersPage
 from pages.base_page import RecoveryHandledException
 from utils.logger import Logger
 from utils.config import Config
 import time
+import paramiko
 
 def main():
     """Main orchestration function."""
@@ -29,7 +31,7 @@ def main():
     
     try:
         logger.info("=" * 60)
-        logger.info("Starting Home Gateway Upgrade Report Automation")
+        logger.info("Starting Home Gateway Configuration Automation")
         logger.info("Target URL: " + Config.BASE_URL)
         logger.info("=" * 60)
         
@@ -61,7 +63,7 @@ def main():
         logger.info("\n--- STEP 3: LAN PAGE CONFIGURATION ---")
         lan_page = LanPage(driver)
         
-        # Navigate to LAN page
+        # Navigate to LAN pa
         lan_page.navigate()
         
         # Configure IPs
@@ -87,6 +89,17 @@ def main():
         
         logger.info(f"Attempting re-login at {new_url}...")
         login_page.login(url=new_url)
+        
+        # 4.1 VERIFY ADVANCED MODE
+        logger.info("\n--- STEP 4.1: VERIFY ADVANCED MODE AT NEW IP ---")
+        # Reuse dashboard_page instance (re-initialized with current driver state) may be safer to re-instantiate
+        dashboard_page_new_ip = DashboardPage(driver) # Create new instance to be safe
+        dashboard_page_new_ip.wait_for_page_load()
+
+        if dashboard_page_new_ip.ensure_advanced_mode():
+             logger.info("Successfully verified/switched to Advanced Mode at new IP.")
+        else:
+             logger.warning("Could not verify Advanced Mode at new IP.")
         
         # 5. NAVIGATE TO NEW IP WIFI PAGE
         logger.info("\n--- STEP 5: NAVIGATE TO NEW IP WIFI PAGE ---")
@@ -317,6 +330,17 @@ def main():
             logger.info("WiFi Guest configured successfully.")
         else:
             logger.error("WiFi Guest configuration failed.")
+
+        # 17. ADMIN PASSWORD CONFIGURATION
+        logger.info("\n--- STEP 17: ADMIN PASSWORD CONFIGURATION ---")
+        users_page = UsersPage(driver)
+        users_page.navigate()
+        users_page.take_screenshot("43_users_page_loaded")
+        if users_page.update_admin_password("SoftAtHome"):
+            users_page.take_screenshot("44_admin_password_updated")
+            logger.info("Admin password updated successfully.")
+        else:
+            logger.error("Admin password configuration failed.")
 
         logger.info("\n" + "=" * 60)
         logger.info("All automation steps completed successfully!")

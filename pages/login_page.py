@@ -1,5 +1,7 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 from pages.base_page import BasePage
 from utils.config import Config
@@ -19,29 +21,43 @@ class LoginPage(BasePage):
         self.logger.info(f"Attempting login at {target_url}...")
         
         try:
-            # 1. Supprimer le contenu par defaut (Delete default content)
-            # Using Ctrl+A + Delete to be robust against pre-filled text
-            username_element = self.find_element(self.USERNAME_INPUT)
-            username_element.click()
-            # Windows/Linux uses CONTROL, Mac uses COMMAND. Assuming Windows based on context.
+            wait = WebDriverWait(self.driver, 20)
+
+            # Wait for Vue.js to finish mounting before interacting
+            time.sleep(2)
+
+            # 1. Wait until username input is clickable (overlay dismissed)
+            username_element = wait.until(
+                EC.element_to_be_clickable(self.USERNAME_INPUT)
+            )
+
+            # Use JS click to bypass any residual overlay
+            self.driver.execute_script("arguments[0].click();", username_element)
             username_element.send_keys(Keys.CONTROL, "a")
             username_element.send_keys(Keys.DELETE)
-            # Ensure it's empty
             username_element.clear()
             
-            # 2. Ecrire 'root'
+            # 2. Enter 'root'
             self.logger.info("Entering 'root' into username")
             username_element.send_keys("root")
             
-            # 3. Ecrire 'sah' (Password)
+            # 3. Enter password
             self.logger.info("Entering 'sah' into password")
-            self.enter_text(self.PASSWORD_INPUT, "sah")
+            password_element = wait.until(
+                EC.element_to_be_clickable(self.PASSWORD_INPUT)
+            )
+            self.driver.execute_script("arguments[0].click();", password_element)
+            password_element.clear()
+            password_element.send_keys("sah")
             
             # 4. Click Login
-            self.click(self.LOGIN_BUTTON)
+            login_btn = wait.until(
+                EC.element_to_be_clickable(self.LOGIN_BUTTON)
+            )
+            self.driver.execute_script("arguments[0].click();", login_btn)
             self.logger.info("Login submitted.")
             
-            # 5. Wait until next page is fully charged
+            # 5. Wait until next page is fully loaded
             self.logger.info("Waiting for next page to load...")
             time.sleep(10) 
             

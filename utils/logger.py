@@ -19,7 +19,7 @@ class Logger:
         log_file = datetime.now().strftime("automation_%Y-%m-%d_%H-%M-%S.log")
         log_path = os.path.join(log_dir, log_file)
 
-        self.logger = logging.getLogger("HomeGatewayAutomation")
+        self.logger = logging.getLogger("HomeGatewayConfigAutomation")
         self.logger.setLevel(logging.INFO)
 
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
